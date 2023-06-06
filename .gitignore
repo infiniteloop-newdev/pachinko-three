@@ -1,3 +1,7 @@
+/assets/*.wasm
+
+# node .gitignore
+
 # Logs
 logs
 *.log
