@@ -5,14 +5,18 @@ import {
     DirectionalLight,
     Engine,
     HavokPlugin,
+    Mesh,
     PhysicsAggregate,
     PhysicsShapeType,
+    PointerEventTypes,
     Scene,
     Vector3,
     WebGPUEngine,
 } from '@babylonjs/core';
 import HavokPhysics from '@babylonjs/havok';
 import havokWasmUrl from '../assets/HavokPhysics.wasm?url';
+
+import "pepjs";
 
 class App {
     public constructor(private readonly engine: Engine, havok: any) {
@@ -30,17 +34,29 @@ class App {
         );
         new DirectionalLight('MainLight', new Vector3(0.1, -0.5, 0.2), scene);
 
-        const sphere = CreateSphere('Sphere', {}, scene);
-        sphere.position = new Vector3(0, 10, 0);
-        new PhysicsAggregate(
-            sphere,
-            PhysicsShapeType.SPHERE,
-            {
-                mass: 1.0,
-                restitution: 0.75,
-            },
-            scene
-        );
+        function spawnSphere() {
+            let sphere: Mesh|null = CreateSphere('Sphere', {}, scene);
+            sphere.position = new Vector3(0, 10, 0);
+            const aggregate = new PhysicsAggregate(
+                sphere,
+                PhysicsShapeType.SPHERE,
+                {
+                    mass: 2.0,
+                    restitution: 0.75,
+                },
+                scene
+            );
+            aggregate.body.applyForce(new Vector3(Math.random() * 10, -1, Math.random() * 5), Vector3.Zero());
+
+            const observer = scene.onBeforeRenderObservable.add(() => {
+                if (sphere && sphere.position.y < -2) {
+                    sphere.dispose();
+                    sphere = null;
+                    scene.onBeforeRenderObservable.remove(observer);
+                }
+            });
+        }
+
         const ground = CreateGround('Ground', { width: 10, height: 10 }, scene);
         new PhysicsAggregate(
             ground,
@@ -50,6 +66,12 @@ class App {
             },
             scene
         );
+
+        scene.onPointerObservable.add((eventData) => {
+            if (eventData.type === PointerEventTypes.POINTERUP) {
+                spawnSphere();
+            }
+        });
 
         this.engine.runRenderLoop(() => {
             scene.render();
