@@ -1,6 +1,8 @@
 import {
     ArcRotateCamera,
+    Color3,
     Color4,
+    CreateBox,
     CreateGround,
     CreateSphere,
     DeviceSourceManager,
@@ -10,10 +12,13 @@ import {
     HavokPlugin,
     Mesh,
     Observable,
+    PBRMaterial,
     PhysicsAggregate,
     PhysicsShapeType,
-    PointerEventTypes,
+    Plane,
+    RefractionTexture,
     Scene,
+    StandardMaterial,
     Vector3,
     WebGPUEngine,
 } from '@babylonjs/core';
@@ -91,25 +96,27 @@ class App {
         const havokPlugin = new HavokPlugin(true, havok);
         scene.enablePhysics(new Vector3(0, -9.8, 0), havokPlugin);
 
-        new ArcRotateCamera(
+        const camera = new ArcRotateCamera(
             'MainCamera',
-            0,
+            0.1,
             Math.PI / 2.2,
             40,
             Vector3.Zero(),
             scene
         );
-        new DirectionalLight('MainLight', new Vector3(0.1, -0.5, 0.2), scene);
+        // camera.useAutoRotationBehavior = true;
+        new DirectionalLight('MainLight', new Vector3(-1, -0.5, 1).normalize(), scene);
 
         function spawnSphere(position: Vector3) {
             let sphere: Mesh | null = CreateSphere('Sphere', {}, scene);
             sphere.position = position;
+            sphere.scaling = new Vector3(0.5, 0.5, 0.5);
             const aggregate = new PhysicsAggregate(
                 sphere,
                 PhysicsShapeType.SPHERE,
                 {
-                    mass: 1.0,
-                    restitution: 0.75,
+                    mass: 0.5,
+                    restitution: 0.6,
                 },
                 scene
             );
@@ -134,6 +141,63 @@ class App {
             },
             scene
         );
+
+        const backgroundWall = CreateBox('BackgroundWall', { height: 30, depth: 1, width: 1 });
+        backgroundWall.scaling.z = 10;
+        backgroundWall.position.x = -1;
+        new PhysicsAggregate(
+            backgroundWall,
+            PhysicsShapeType.BOX,
+            {
+                mass: 0.0,
+            },
+            scene,
+        );
+        const leftWall = CreateBox('LeftWall', { height: 30, depth: 1, width: 1 });
+        leftWall.scaling.z = 0.5;
+        leftWall.scaling.x = 2;
+        leftWall.position.z = -5;
+        new PhysicsAggregate(
+            leftWall,
+            PhysicsShapeType.BOX,
+            {
+                mass: 0.0,
+            },
+            scene,
+        );
+        const rightWall = CreateBox('RightWall', { height: 30, depth: 1, width: 1 });
+        rightWall.scaling.z = 0.5;
+        rightWall.scaling.x = 2;
+        rightWall.position.z = 5;
+        new PhysicsAggregate(
+            rightWall,
+            PhysicsShapeType.BOX,
+            {
+                mass: 0.0,
+            },
+            scene,
+        );
+        const frontGlass = CreateBox('FrontGlass', { height: 30, depth: 1, width: 1 });
+        frontGlass.scaling.z = 9.5;
+        frontGlass.position.x = 0.5;
+        new PhysicsAggregate(
+            frontGlass,
+            PhysicsShapeType.BOX,
+            {
+                mass: 0.0,
+            },
+            scene,
+        );
+        const refractionMaterial = new StandardMaterial("refraction", scene);
+        refractionMaterial.diffuseColor = new Color3(1, 1, 1);
+        const refractionTexture = new RefractionTexture("refraction", 1024, scene, true);
+        refractionTexture.refractionPlane = new Plane(0, 0, -1, 0);
+        refractionTexture.renderList = [backgroundWall, leftWall, rightWall];
+        refractionTexture.depth = 5;
+        refractionMaterial.refractionTexture = refractionTexture;
+        refractionMaterial.indexOfRefraction = 0.5;
+        refractionMaterial.alpha = 0.5;
+        frontGlass.material = refractionMaterial;
 
         const userInputManager = new UserInputManager(engine);
         userInputManager.onLeftClickedObservable.add(() => {
