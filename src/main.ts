@@ -120,7 +120,6 @@ class App {
         function spawnSphere(position: Vector3) {
             let sphere: Mesh | null = CreateSphere('Sphere', {}, scene);
             sphere.position = position;
-            sphere.scaling = new Vector3(0.5, 0.5, 0.5);
             sphere.material = ballMaterial;
             const aggregate = new PhysicsAggregate(
                 sphere,
@@ -144,8 +143,12 @@ class App {
 
         const seed = Math.random();
         const prng = seedrandom(seed.toString());
+        console.log('seed is ', seed);
         createWalls(scene);
         createPins(scene, prng);
+        createGoalPins(scene, new Vector3(0, -13, 0));
+        createGoalPins(scene, new Vector3(0, -13, -3.2));
+        createGoalPins(scene, new Vector3(0, -13, 3.2));
 
         const userInputManager = new UserInputManager(engine);
         userInputManager.onLeftClickedObservable.add(() => {
@@ -206,18 +209,6 @@ window.addEventListener('load', () => {
 });
 
 function createWalls(scene: Scene): void {
-
-    const ground = CreateGround('Ground', { width: 2, height: 10 }, scene);
-    ground.position.y = -15;
-    new PhysicsAggregate(
-        ground,
-        PhysicsShapeType.BOX,
-        {
-            mass: 0.0,
-        },
-        scene
-    );
-
     const wallMaterial = new StandardMaterial('WallMat', scene);
     wallMaterial.diffuseColor = new Color3(1.0, 0.5, 0.5);
     const backgroundWall = CreateBox('BackgroundWall', { height: 30, depth: 1, width: 1 });
@@ -307,16 +298,12 @@ function createWalls(scene: Scene): void {
     frontGlass.material = refractionMaterial;
 }
 
-function getRandomVector3(prng: seedrandom.PRNG, rangeX: number, rangeY: number, rangeZ: number): Vector3 {
-    return new Vector3(
-        (prng.double() * (rangeX / 2)) - rangeX / 2,
-        (prng.double() * (rangeY / 2)) - rangeY / 2,
-        (prng.double() * (rangeZ / 2)) - rangeZ / 2,
-    );
+function getRandomFromTo(prng: seedrandom.PRNG, from: number, to: number): number {
+    return (prng.double() * (to - from)) + from;
 }
 
 function createPins(scene: Scene, prng: seedrandom.PRNG): void {
-    const count = (prng.double() * 10.0);
+    const count = 55;
 
     const baseSphere = CreateSphere('BaseSphere', {}, scene);
     baseSphere.scaling = new Vector3(0.2, 0.2, 0.2);
@@ -325,14 +312,51 @@ function createPins(scene: Scene, prng: seedrandom.PRNG): void {
     for (let i = 0; i < count; i++) {
         const instance = baseSphere.createInstance(`pin${i}`);
         instance.setEnabled(true);
-        instance.position = getRandomVector3(prng, 10, 10, 0);
+        instance.position = new Vector3(
+            0,
+            getRandomFromTo(prng, -12, 12),
+            getRandomFromTo(prng, -5, 5),
+        );
         new PhysicsAggregate(
             instance,
             PhysicsShapeType.SPHERE,
             {
                 mass: 0.0,
-                restitution: 1,
+                restitution: 0.8,
             },
         );
     }
+}
+
+function createGoalPins(scene: Scene, centerPos: Vector3): void {
+    const baseSphere = CreateSphere('BaseSphere', {}, scene);
+    baseSphere.scaling = new Vector3(0.2, 0.2, 0.2);
+    baseSphere.setEnabled(false);
+
+    const goal = [
+        { x: 0, y: 0.5, z: 0.35 },
+        { x: 0, y: 0.8, z: 0.3 },
+        { x: 0, y: 1.1, z: 0.25 },
+        { x: 0, y: 0.5, z: -0.35 },
+        { x: 0, y: 0.8, z: -0.3 },
+        { x: 0, y: 1.1, z: -0.25 },
+    ];
+
+    goal.forEach((pos, i) => {
+        const instance = baseSphere.createInstance(`goalPin${i}`);
+        instance.setEnabled(true);
+        instance.position = new Vector3(
+            centerPos.x + pos.x,
+            centerPos.y + pos.y,
+            centerPos.z + pos.z,
+        );
+        new PhysicsAggregate(
+            instance,
+            PhysicsShapeType.SPHERE,
+            {
+                mass: 0.0,
+                restitution: 0.9,
+            },
+        );
+    });
 }
