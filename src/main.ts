@@ -3,7 +3,6 @@ import {
     Color3,
     Color4,
     CreateBox,
-    CreateGround,
     CreateSphere,
     CubeTexture,
     DeviceSourceManager,
@@ -100,12 +99,13 @@ class App {
 
         const camera = new ArcRotateCamera(
             'MainCamera',
-            0.1,
-            Math.PI / 2.2,
+            Math.PI / 16,
+            Math.PI / 4.2,
             40,
             Vector3.Zero(),
             scene
         );
+        // camera.attachControl(true);
         // camera.useAutoRotationBehavior = true;
         new DirectionalLight('MainLight', new Vector3(-1, -0.5, 1).normalize(), scene);
 
@@ -125,8 +125,8 @@ class App {
                 sphere,
                 PhysicsShapeType.SPHERE,
                 {
-                    mass: 0.5,
-                    restitution: 0.6,
+                    mass: 0.7,
+                    restitution: 0.7,
                 },
                 scene
             );
@@ -152,13 +152,13 @@ class App {
 
         const userInputManager = new UserInputManager(engine);
         userInputManager.onLeftClickedObservable.add(() => {
-            spawnSphere(new Vector3(0, 14, -3));
+            spawnSphere(new Vector3(-19, 4, 6.6));
         });
         userInputManager.onCenterClickedObservable.add(() => {
-            spawnSphere(new Vector3(0, 14, 0));
+            spawnSphere(new Vector3(-19, 4, 0));
         });
         userInputManager.onRightClickedObservable.add(() => {
-            spawnSphere(new Vector3(0, 14, 3));
+            spawnSphere(new Vector3(-19, 4, -6.6));
         });
 
         this.engine.runRenderLoop(() => {
@@ -211,9 +211,9 @@ window.addEventListener('load', () => {
 function createWalls(scene: Scene): void {
     const wallMaterial = new StandardMaterial('WallMat', scene);
     wallMaterial.diffuseColor = new Color3(1.0, 0.5, 0.5);
-    const backgroundWall = CreateBox('BackgroundWall', { height: 30, depth: 1, width: 1 });
-    backgroundWall.scaling.z = 10;
-    backgroundWall.position.x = -1;
+    const backgroundWall = CreateBox('BackgroundWall', { height: 40, depth: 1, width: 0.1 });
+    backgroundWall.rotation.z = Math.PI / 2.2;
+    backgroundWall.scaling.z = 20;
     backgroundWall.material = wallMaterial;
     new PhysicsAggregate(
         backgroundWall,
@@ -223,10 +223,10 @@ function createWalls(scene: Scene): void {
         },
         scene,
     );
-    const leftWall = CreateBox('LeftWall', { height: 30, depth: 1, width: 1 });
+    const leftWall = CreateBox('LeftWall', { height: 12, depth: 1, width: 10 });
+    leftWall.scaling.x = 4;
     leftWall.scaling.z = 0.5;
-    leftWall.scaling.x = 2;
-    leftWall.position.z = -5;
+    leftWall.position.z = -10;
     leftWall.material = wallMaterial;
     new PhysicsAggregate(
         leftWall,
@@ -236,10 +236,10 @@ function createWalls(scene: Scene): void {
         },
         scene,
     );
-    const rightWall = CreateBox('RightWall', { height: 30, depth: 1, width: 1 });
+    const rightWall = CreateBox('RightWall', { height: 12, depth: 1, width: 10 });
+    rightWall.scaling.x = 4;
     rightWall.scaling.z = 0.5;
-    rightWall.scaling.x = 2;
-    rightWall.position.z = 5;
+    rightWall.position.z = 10;
     rightWall.material = wallMaterial;
     new PhysicsAggregate(
         rightWall,
@@ -249,9 +249,13 @@ function createWalls(scene: Scene): void {
         },
         scene,
     );
-    const frontGlass = CreateBox('FrontGlass', { height: 30, depth: 1, width: 1 });
-    frontGlass.scaling.z = 9.5;
-    frontGlass.position.x = 0.5;
+    const frontGlass = CreateBox('FrontGlass', { height: 40, depth: 1, width: 0.1 });
+    frontGlass.rotation.z = Math.PI / 2.2;
+    frontGlass.scaling.z = 20;
+    frontGlass.position.y = 3;
+    const frontGlassMaterial = wallMaterial.clone('FrontGlassMat');
+    frontGlassMaterial.alpha = 0.2;
+    frontGlass.material = frontGlassMaterial;
     new PhysicsAggregate(
         frontGlass,
         PhysicsShapeType.BOX,
@@ -260,10 +264,10 @@ function createWalls(scene: Scene): void {
         },
         scene,
     );
-    const wall1 = CreateBox('Wall1', { height: 30, depth: 1, width: 1 });
+    const wall1 = CreateBox('Wall1', { height: 12, depth: 1, width: 1 });
     wall1.scaling.z = 0.1;
-    wall1.scaling.x = 2;
-    wall1.position.z = -1.5;
+    wall1.scaling.x = 40;
+    wall1.position.z = -3.33;
     wall1.material = wallMaterial;
     new PhysicsAggregate(
         wall1,
@@ -273,10 +277,10 @@ function createWalls(scene: Scene): void {
         },
         scene,
     );
-    const wall2 = CreateBox('Wall2', { height: 30, depth: 1, width: 1 });
+    const wall2 = CreateBox('Wall2', { height: 12, depth: 1, width: 1 });
     wall2.scaling.z = 0.1;
-    wall2.scaling.x = 2;
-    wall2.position.z = 1.5;
+    wall2.scaling.x = 40;
+    wall2.position.z = 3.33;
     wall2.material = wallMaterial;
     new PhysicsAggregate(
         wall2,
@@ -286,16 +290,6 @@ function createWalls(scene: Scene): void {
         },
         scene,
     );
-    const refractionMaterial = new StandardMaterial("refraction", scene);
-    refractionMaterial.diffuseColor = new Color3(1, 1, 1);
-    const refractionTexture = new RefractionTexture("refraction", 1024, scene, true);
-    refractionTexture.refractionPlane = new Plane(0, 0, -1, 0);
-    refractionTexture.renderList = [backgroundWall, leftWall, rightWall];
-    refractionTexture.depth = 5;
-    refractionMaterial.refractionTexture = refractionTexture;
-    refractionMaterial.indexOfRefraction = 0.5;
-    refractionMaterial.alpha = 0.5;
-    frontGlass.material = refractionMaterial;
 }
 
 function getRandomFromTo(prng: seedrandom.PRNG, from: number, to: number): number {
@@ -303,7 +297,7 @@ function getRandomFromTo(prng: seedrandom.PRNG, from: number, to: number): numbe
 }
 
 function createPins(scene: Scene, prng: seedrandom.PRNG): void {
-    const count = 55;
+    const count = 70;
 
     const baseSphere = CreateSphere('BaseSphere', {}, scene);
     baseSphere.scaling = new Vector3(0.2, 0.2, 0.2);
@@ -312,11 +306,10 @@ function createPins(scene: Scene, prng: seedrandom.PRNG): void {
     for (let i = 0; i < count; i++) {
         const instance = baseSphere.createInstance(`pin${i}`);
         instance.setEnabled(true);
-        instance.position = new Vector3(
-            0,
-            getRandomFromTo(prng, -12, 12),
-            getRandomFromTo(prng, -5, 5),
-        );
+        const x = getRandomFromTo(prng, -20, 20);
+        const y = (40 - x) * 0.145 - 5;
+        const z = getRandomFromTo(prng, -10, 10);
+        instance.position = new Vector3(x, y, z);
         new PhysicsAggregate(
             instance,
             PhysicsShapeType.SPHERE,
