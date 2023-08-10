@@ -26,6 +26,10 @@ import havokWasmUrl from '../assets/HavokPhysics.wasm?url';
 
 import "pepjs";
 
+/**
+ * キーボードやマウスなどのデバイスの接続を監視し、左クリック、中央クリック、右クリックなどの入力イベントを処理します。
+ * また、このクラスは、Observable クラスを使用して、各入力イベントに対する観察者を登録することができます。
+ */
 class UserInputManager {
     public readonly deviceSourceManager: DeviceSourceManager;
     public readonly onLeftClickedObservable: Observable<null>;
@@ -290,10 +294,22 @@ function createWalls(scene: Scene): void {
     );
 }
 
+/**
+ * Returns a random number between the specified range.
+ * @param {seedrandom.PRNG} prng - The seeded pseudo-random number generator.
+ * @param {number} from - The minimum value of the range.
+ * @param {number} to - The maximum value of the range.
+ * @returns {number} A random number between the specified range.
+ */
 function getRandomFromTo(prng: seedrandom.PRNG, from: number, to: number): number {
     return (prng.double() * (to - from)) + from;
 }
 
+/**
+ * Creates a set of pins in the scene using a base sphere mesh and random positions.
+ * @param scene - The scene to add the pins to.
+ * @param prng - The pseudorandom number generator to use for generating random positions.
+ */
 function createPins(scene: Scene, prng: seedrandom.PRNG): void {
     const count = 70;
 
