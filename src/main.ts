@@ -15,8 +15,6 @@ import {
     PBRMetallicRoughnessMaterial,
     PhysicsAggregate,
     PhysicsShapeType,
-    Plane,
-    RefractionTexture,
     Scene,
     StandardMaterial,
     Vector3,
@@ -106,7 +104,7 @@ class App {
             scene
         );
         // camera.attachControl(true);
-        // camera.useAutoRotationBehavior = true;
+        camera.useAutoRotationBehavior = true;
         new DirectionalLight('MainLight', new Vector3(-1, -0.5, 1).normalize(), scene);
 
         // from https://playground.babylonjs.com/#2FDQT5#2313
